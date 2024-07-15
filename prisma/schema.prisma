@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model umService {
+  serviceId   Int         @id @default(autoincrement()) @map("service_id")
+  serviceName String      @map("service_name") @db.VarChar(16)
+  umRequest   umRequest[]
+
+  @@map("um_service")
+}
+
+model umRequest {
+  requestId Int      @id @default(autoincrement()) @map("request_id")
+  serviceId Int      @map("service_id")
+  userId    Int      @map("user_id")
+  siteId    Int      @map("site_id")
+  authId    Int      @map("auth_id")
+  code      String   @db.VarChar(8)
+  used      Boolean
+  createdAt DateTime @map("created_at") @db.Timestamp(6)
+
+  umService        umService        @relation(fields: [serviceId], references: [serviceId])
+  umUser           umUser           @relation(fields: [userId], references: [userId])
+  umSite           umSite           @relation(fields: [siteId], references: [siteId])
+  umAuthentication umAuthentication @relation(fields: [authId], references: [authId])
+
+  @@map("um_request")
+}
+
+model umRole {
+  roleId    Int      @id @default(autoincrement()) @map("role_id")
+  roleName  String   @map("role_name") @db.VarChar(256)
+  createdAt DateTime @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @map("updated_at") @db.Timestamp(6)
+
+  umUserSiteRole umUserSiteRole[]
+
+  @@map("um_role")
+}
+
+model umSession {
+  sessionId Int      @id @default(autoincrement()) @map("session_id")
+  userId    Int      @map("user_id")
+  siteId    Int      @map("site_id")
+  loginAt   DateTime @map("login_at") @db.Timestamp(6)
+  logoutAt  DateTime @map("logout_at") @db.Timestamp(6)
+
+  umUser umUser @relation(fields: [userId], references: [userId])
+  umSite umSite @relation(fields: [siteId], references: [siteId])
+
+  @@map("um_session")
+}
+
+model umUser {
+  userId    Int      @id @default(autoincrement()) @map("user_id")
+  email     String   @unique @db.VarChar(250)
+  createdAt DateTime @map("created_at") @db.Timestamp(6)
+  updatedAt DateTime @map("updated_at") @db.Timestamp(6)
+
+  umRequest        umRequest[]
+  umSession        umSession[]
+  umUserSiteRole   umUserSiteRole[]
+  umAuthentication umAuthentication[]
+
+  @@map("um_user")
+}
+
+model umAuthentication {
+  authId          Int      @id @default(autoincrement()) @map("auth_id")
+  userId          Int      @map("user_id")
+  siteId          Int      @map("site_id")
+  password        String   @db.VarChar(72)
+  providerId      Int      @map("provider_id")
+  accessToken     String   @map("access_token") @db.VarChar(550)
+  refreshToken    String   @map("refresh_token") @db.VarChar(550)
+  emailVerifiedAt DateTime @map("email_verified_at") @db.Timestamp(6)
+  twoFaEnabledAt  DateTime @map("two_FA_enabled_at") @db.Timestamp(6)
+  createdAt       DateTime @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime @map("updated_at") @db.Timestamp(6)
+
+  umUser     umUser      @relation(fields: [userId], references: [userId])
+  umSite     umSite      @relation(fields: [siteId], references: [siteId])
+  umProvider umProvider  @relation(fields: [providerId], references: [providerId])
+  umRequest  umRequest[]
+
+  @@map("um_authentication")
+}
+
+model umProvider {
+  providerId   Int    @id @default(autoincrement()) @map("provider_id")
+  providerName String @map("provider_name") @db.VarChar(8)
+
+  umAuthentication umAuthentication[]
+  umOauthKey       umOauthKey[]
+
+  @@map("um_provider")
+}
+
+model umOauthKey {
+  keyId        Int    @id @default(autoincrement()) @map("key_id")
+  siteId       Int    @map("site_id")
+  providerId   Int    @map("provider_id")
+  clientId     String @map("client_id") @db.VarChar(64)
+  clientSecret String @map("client_secret") @db.VarChar(128)
+
+  umSite     umSite     @relation(fields: [siteId], references: [siteId])
+  umProvider umProvider @relation(fields: [providerId], references: [providerId])
+
+  @@map("um_oauth_key")
+}
+
+model umSite {
+  siteId          Int      @id @default(autoincrement()) @map("site_id")
+  siteName        String   @map("site_name") @db.VarChar(256)
+  createdAt       DateTime @map("created_at") @db.Timestamp(6)
+  updatedAt       DateTime @map("updated_at") @db.Timestamp(6)
+  tokenExpiryTime String   @map("token_expiry_time") @db.VarChar(64)
+
+  umRequest        umRequest[]
+  umSession        umSession[]
+  umUserSiteRole   umUserSiteRole[]
+  umAuthentication umAuthentication[]
+  umOauthKey       umOauthKey[]
+
+  @@map("um_site")
+}
+
+model umUserSiteRole {
+  userId    Int      @map("user_id")
+  siteId    Int      @map("site_id")
+  roleId    Int      @map("role_id")
+  createdAt DateTime @map("created_at") @db.Timestamp(6)
+
+  umUser umUser @relation(fields: [userId], references: [userId])
+  umSite umSite @relation(fields: [siteId], references: [siteId])
+  umRole umRole @relation(fields: [roleId], references: [roleId])
+
+  @@id([userId, siteId])
+  @@map("um_user_site_role")
+}
