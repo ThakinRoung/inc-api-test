@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+
 const siteController = require("../controllers/siteController");
 const roleController = require("../controllers/roleController");
 const jwtMiddleware = require("../middleware/jwtMiddlewares");
@@ -8,7 +9,7 @@ const jwtMiddleware = require("../middleware/jwtMiddlewares");
 router.get("/admin", jwtMiddleware.verifyToken, roleController.isSiteAdmin, siteController.getAdminSites);
 
 // POST /api/sites
-router.post("/", siteController.createSite);
+router.post("/admin", siteController.createSite);
 
 module.exports = router;
 

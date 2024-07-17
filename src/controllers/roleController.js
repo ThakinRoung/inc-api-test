@@ -45,3 +45,20 @@ module.exports.UpdateUserRole = async (req, res) => {
     }
 }
 
+// Using this model, every middleware tried to check permission
+// will have to check the boolean value in the object.
+module.exports.checkRolePermission = async (req, res, next) => {
+    const {siteId, userId} = req.params;
+    const data = {siteId, userId};
+    try {
+        const permission = await roleModel.checkPermissionByUserIdAndSiteId(data);
+        if (permission) {
+            res.locals.permission = permission;
+            next();
+        } else {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+    }catch (error) {
+        return res.status(401).json({ message: 'Not authorized' });
+    }
+}

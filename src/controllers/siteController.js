@@ -10,3 +10,14 @@ module.exports.getAdminSites = async (req, res) => {
         return res.status(400).json({ message: 'Sites not found' });
     }
 }
+
+module.exports.crateSite = async (req, res) => {
+    const { siteName, siteUrl, siteDescription, siteApiKey, siteAdminUserId } = req.body;
+    const data = { siteName, siteUrl, siteDescription, siteApiKey, siteAdminUserId };
+    try {
+        const site = await siteModel.createSite(data);
+        return res.status(200).json({ message: 'Site created successfully' });
+    } catch (error) {
+        return res.status(400).json({ message: 'Site not created' });
+    }
+}

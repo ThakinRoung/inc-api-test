@@ -4,5 +4,5 @@ const roleController = require("../controllers/roleController");
 
 const jwtMiddleware = require("../middleware/jwtMiddlewares");
 
-router.put("/:siteId/user/userId", jwtMiddleware.verifyToken, roleController.isSiteAdmin, roleController.UpdateUserRole);
+router.put("/admin/:siteId/user/userId", jwtMiddleware.verifyToken, roleController.isSiteAdmin, roleController.UpdateUserRole);
 module.exports = router;
